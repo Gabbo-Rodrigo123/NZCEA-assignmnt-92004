@@ -11,15 +11,9 @@ internal class Program
     public static int numberOfUnits;
     public static decimal totalCost;
 
-    // CONSTANTS (no magic numbers)
+    // CONSTANTS
     public const decimal DISCOUNT_RATE = 0.10m;
     public const decimal DEPRECIATION_RATE = 0.05m;
-
-    // VALID RANGES (for expected + boundary control)
-    public const decimal MIN_COST = 1m;
-    public const decimal MAX_COST = 10000m;
-    public const int MIN_UNITS = 1;
-    public const int MAX_UNITS = 100;
 
     // CATEGORY COUNTS
     static int laptopCount = 0;
@@ -40,7 +34,7 @@ internal class Program
         {
             OneDevice();
 
-            // VALIDATE CONTINUE INPUT
+            // SAFE CONTINUE INPUT (prevents crash)
             string input;
             do
             {
@@ -74,39 +68,54 @@ internal class Program
         int category;
         string categoryName = "";
 
-        // DEVICE NAME (must not be empty)
+        // DEVICE NAME (invalid handled)
         do
         {
             Console.Write("\nEnter device name: ");
             deviceType = Console.ReadLine();
 
+            if (string.IsNullOrWhiteSpace(deviceType))
+                Console.WriteLine("Invalid input. Device name cannot be empty.");
+
         } while (string.IsNullOrWhiteSpace(deviceType));
 
-        // COST PER UNIT (EXPECTED RANGE: 1 – 10000)
+        // COST PER UNIT (expected + boundary + invalid handled)
         while (true)
         {
-            Console.Write($"Enter cost per unit ({MIN_COST} - {MAX_COST}): ");
+            Console.Write("Enter cost per unit (must be > 0): ");
 
-            if (decimal.TryParse(Console.ReadLine(), out costPerUnit) &&
-                costPerUnit >= MIN_COST && costPerUnit <= MAX_COST)
-                break;
+            if (decimal.TryParse(Console.ReadLine(), out costPerUnit))
+            {
+                if (costPerUnit > 0)
+                    break;
 
-            Console.WriteLine("Invalid input. Enter a valid cost within range.");
+                Console.WriteLine("Value must be greater than 0.");
+            }
+            else
+            {
+                Console.WriteLine("Invalid input. Enter a number.");
+            }
         }
 
-        // NUMBER OF UNITS (EXPECTED RANGE: 1 – 100)
+        // NUMBER OF UNITS (expected + boundary + invalid handled)
         while (true)
         {
-            Console.Write($"Enter number of units ({MIN_UNITS} - {MAX_UNITS}): ");
+            Console.Write("Enter number of units (1 or more): ");
 
-            if (int.TryParse(Console.ReadLine(), out numberOfUnits) &&
-                numberOfUnits >= MIN_UNITS && numberOfUnits <= MAX_UNITS)
-                break;
+            if (int.TryParse(Console.ReadLine(), out numberOfUnits))
+            {
+                if (numberOfUnits >= 1)
+                    break;
 
-            Console.WriteLine("Invalid input. Enter a valid number within range.");
+                Console.WriteLine("Units must be at least 1.");
+            }
+            else
+            {
+                Console.WriteLine("Invalid input. Enter a whole number.");
+            }
         }
 
-        // CATEGORY (1–3 ONLY)
+        // CATEGORY (strict boundary control)
         while (true)
         {
             Console.Write("Category (1=Laptop, 2=Desktop, 3=Other): ");
@@ -148,13 +157,13 @@ internal class Program
             mostExpensiveDevice = deviceType;
         }
 
-        // DEPRECIATION (5% OVER 6 MONTHS)
+        // DEPRECIATION (5% over 6 months)
         decimal value = costPerUnit;
         string depreciationTable = "\nMonth\tValue";
 
         for (int i = 1; i <= 6; i++)
         {
-            value = value - (value * DEPRECIATION_RATE);
+            value -= value * DEPRECIATION_RATE;
             value = Math.Round(value, 2);
 
             depreciationTable += $"\n{i}\t{value:C}";
@@ -170,7 +179,7 @@ internal class Program
         overallCost += finalCost;
     }
 
-    // DISCOUNT LOGIC
+    // DISCOUNT FUNCTION
     static decimal DiscountCost()
     {
         if (numberOfUnits > 5)
