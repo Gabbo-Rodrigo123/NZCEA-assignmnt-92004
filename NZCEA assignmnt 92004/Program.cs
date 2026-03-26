@@ -5,23 +5,22 @@ internal class Program
 {
     // GLOBAL VARIABLES
     static decimal overallCost = 0;
-
     public static List<string> deviceSlip = new List<string>();
 
     public static decimal costPerUnit;
     public static int numberOfUnits;
     public static decimal totalCost;
 
-    // CONSTANTS (better practice than hardcoding values)
+    // CONSTANTS (no magic numbers)
     public const decimal DISCOUNT_RATE = 0.10m;
     public const decimal DEPRECIATION_RATE = 0.05m;
 
-    // device counters
+    // CATEGORY COUNTS
     static int laptopCount = 0;
     static int desktopCount = 0;
     static int otherCount = 0;
 
-    // most expensive tracking
+    // MOST EXPENSIVE TRACKING
     static string mostExpensiveDevice = "";
     static decimal highestCost = 0;
 
@@ -31,29 +30,35 @@ internal class Program
 
         char continueInput = 'y';
 
-        // LOOP for multiple devices
         while (continueInput == 'y')
         {
             OneDevice();
 
-            Console.WriteLine("\nAdd another device? (y/n)");
-            continueInput = Console.ReadLine().ToLower()[0];
+            // VALIDATE CONTINUE INPUT
+            string input;
+            do
+            {
+                Console.Write("\nAdd another device? (y/n): ");
+                input = Console.ReadLine().ToLower();
+
+            } while (input != "y" && input != "n");
+
+            continueInput = input[0];
         }
 
-        // OUTPUT DEVICE SLIP
+        // OUTPUT RESULTS
         Console.WriteLine("\n--- Device Slip ---");
+
         foreach (string item in deviceSlip)
         {
             Console.WriteLine(item);
         }
 
-        // FINAL SUMMARY OUTPUT
         Console.WriteLine($"\nNumber of laptops: {laptopCount}");
         Console.WriteLine($"Number of desktops: {desktopCount}");
         Console.WriteLine($"Number of other devices: {otherCount}");
 
         Console.WriteLine($"\nTotal insurance value: {overallCost:C}");
-
         Console.WriteLine($"Most expensive device: {mostExpensiveDevice} @ {highestCost:C}");
     }
 
@@ -63,17 +68,37 @@ internal class Program
         int category;
         string categoryName = "";
 
-        // INPUT
-        Console.Write("\nEnter device name: ");
-        deviceType = Console.ReadLine();
+        // DEVICE NAME (must not be empty)
+        do
+        {
+            Console.Write("\nEnter device name: ");
+            deviceType = Console.ReadLine();
 
-        Console.Write("Enter cost per unit: ");
-        costPerUnit = Convert.ToDecimal(Console.ReadLine());
+        } while (string.IsNullOrWhiteSpace(deviceType));
 
-        Console.Write("Enter number of units: ");
-        numberOfUnits = Convert.ToInt32(Console.ReadLine());
+        // COST PER UNIT (positive decimal)
+        while (true)
+        {
+            Console.Write("Enter cost per unit: ");
 
-        // VALIDATE CATEGORY INPUT
+            if (decimal.TryParse(Console.ReadLine(), out costPerUnit) && costPerUnit > 0)
+                break;
+
+            Console.WriteLine("Invalid input. Enter a positive number.");
+        }
+
+        // NUMBER OF UNITS (positive integer)
+        while (true)
+        {
+            Console.Write("Enter number of units: ");
+
+            if (int.TryParse(Console.ReadLine(), out numberOfUnits) && numberOfUnits > 0)
+                break;
+
+            Console.WriteLine("Invalid input. Enter a positive whole number.");
+        }
+
+        // CATEGORY (1–3 only)
         while (true)
         {
             Console.Write("Category (1=Laptop, 2=Desktop, 3=Other): ");
@@ -81,10 +106,10 @@ internal class Program
             if (int.TryParse(Console.ReadLine(), out category) && category >= 1 && category <= 3)
                 break;
 
-            Console.WriteLine("Invalid input. Please enter 1, 2, or 3.");
+            Console.WriteLine("Invalid input. Enter 1, 2, or 3.");
         }
 
-        // CATEGORY LOGIC + COUNTING
+        // CATEGORY NAME + COUNTING
         if (category == 1)
         {
             categoryName = "Laptop";
@@ -101,22 +126,21 @@ internal class Program
             otherCount += numberOfUnits;
         }
 
-        // CALCULATE TOTAL COST BEFORE DISCOUNT
+        // TOTAL COST
         totalCost = costPerUnit * numberOfUnits;
 
-        // CALCULATE DISCOUNTED COST
+        // APPLY DISCOUNT
         decimal finalCost = DiscountCost();
 
-        // TRACK MOST EXPENSIVE DEVICE (based on total cost)
+        // TRACK MOST EXPENSIVE
         if (finalCost > highestCost)
         {
             highestCost = finalCost;
             mostExpensiveDevice = deviceType;
         }
 
-        // DEPRECIATION (5% LOSS OVER 6 MONTHS)
+        // DEPRECIATION (5% over 6 months)
         decimal value = costPerUnit;
-
         string depreciationTable = "\nMonth\tValue";
 
         for (int i = 1; i <= 6; i++)
@@ -127,7 +151,7 @@ internal class Program
             depreciationTable += $"\n{i}\t{value:C}";
         }
 
-        // ADD TO SLIP
+        // STORE OUTPUT
         deviceSlip.Add(
             $"{deviceType}\nTotal cost for {numberOfUnits} x {deviceType} = {finalCost:C}" +
             $"\n{depreciationTable}\nCATEGORY: {categoryName}\n"
@@ -137,27 +161,19 @@ internal class Program
         overallCost += finalCost;
     }
 
-    // DISCOUNT FUNCTION
+    // DISCOUNT LOGIC
     static decimal DiscountCost()
     {
-        decimal cost = 0;
-
         if (numberOfUnits > 5)
         {
-            // first 5 full price
             decimal fullPrice = 5 * costPerUnit;
 
-            // remaining with discount
             int remaining = numberOfUnits - 5;
             decimal discounted = remaining * costPerUnit * (1 - DISCOUNT_RATE);
 
-            cost = fullPrice + discounted;
-        }
-        else
-        {
-            cost = totalCost;
+            return fullPrice + discounted;
         }
 
-        return cost;
+        return totalCost;
     }
 }
