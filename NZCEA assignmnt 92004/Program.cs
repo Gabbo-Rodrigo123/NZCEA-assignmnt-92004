@@ -15,6 +15,12 @@ internal class Program
     public const decimal DISCOUNT_RATE = 0.10m;
     public const decimal DEPRECIATION_RATE = 0.05m;
 
+    // VALID RANGES (for expected + boundary control)
+    public const decimal MIN_COST = 1m;
+    public const decimal MAX_COST = 10000m;
+    public const int MIN_UNITS = 1;
+    public const int MAX_UNITS = 100;
+
     // CATEGORY COUNTS
     static int laptopCount = 0;
     static int desktopCount = 0;
@@ -76,34 +82,37 @@ internal class Program
 
         } while (string.IsNullOrWhiteSpace(deviceType));
 
-        // COST PER UNIT (positive decimal)
+        // COST PER UNIT (EXPECTED RANGE: 1 – 10000)
         while (true)
         {
-            Console.Write("Enter cost per unit: ");
+            Console.Write($"Enter cost per unit ({MIN_COST} - {MAX_COST}): ");
 
-            if (decimal.TryParse(Console.ReadLine(), out costPerUnit) && costPerUnit > 0)
+            if (decimal.TryParse(Console.ReadLine(), out costPerUnit) &&
+                costPerUnit >= MIN_COST && costPerUnit <= MAX_COST)
                 break;
 
-            Console.WriteLine("Invalid input. Enter a positive number.");
+            Console.WriteLine("Invalid input. Enter a valid cost within range.");
         }
 
-        // NUMBER OF UNITS (positive integer)
+        // NUMBER OF UNITS (EXPECTED RANGE: 1 – 100)
         while (true)
         {
-            Console.Write("Enter number of units: ");
+            Console.Write($"Enter number of units ({MIN_UNITS} - {MAX_UNITS}): ");
 
-            if (int.TryParse(Console.ReadLine(), out numberOfUnits) && numberOfUnits > 0)
+            if (int.TryParse(Console.ReadLine(), out numberOfUnits) &&
+                numberOfUnits >= MIN_UNITS && numberOfUnits <= MAX_UNITS)
                 break;
 
-            Console.WriteLine("Invalid input. Enter a positive whole number.");
+            Console.WriteLine("Invalid input. Enter a valid number within range.");
         }
 
-        // CATEGORY (1–3 only)
+        // CATEGORY (1–3 ONLY)
         while (true)
         {
             Console.Write("Category (1=Laptop, 2=Desktop, 3=Other): ");
 
-            if (int.TryParse(Console.ReadLine(), out category) && category >= 1 && category <= 3)
+            if (int.TryParse(Console.ReadLine(), out category) &&
+                category >= 1 && category <= 3)
                 break;
 
             Console.WriteLine("Invalid input. Enter 1, 2, or 3.");
@@ -139,7 +148,7 @@ internal class Program
             mostExpensiveDevice = deviceType;
         }
 
-        // DEPRECIATION (5% over 6 months)
+        // DEPRECIATION (5% OVER 6 MONTHS)
         decimal value = costPerUnit;
         string depreciationTable = "\nMonth\tValue";
 
